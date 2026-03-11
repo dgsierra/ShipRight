@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "ShipRight" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+    <link rel="icon" href="/icon.png" type="image/png">
+    <%= stylesheet_link_tag :app %>
+  </head>
+
+  <body class="bg-gray-50 text-gray-900">
+    <% if user_signed_in? %>
+      <nav class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+          <div class="flex items-center gap-6">
+            <span class="text-xl font-bold text-indigo-600">ShipRight</span>
+            <%= link_to "Orders", dashboard_orders_path, class: "text-sm font-medium text-gray-700 hover:text-indigo-600" %>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-sm text-gray-500"><%= current_user.display_name %></span>
+            <%= button_to "Sign out", destroy_user_session_path, method: :delete,
+                class: "text-sm text-red-600 hover:underline bg-transparent border-none cursor-pointer" %>
+          </div>
+        </div>
+      </nav>
+    <% end %>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <% if notice.present? %>
+        <div class="mb-4 rounded-md bg-green-50 border border-green-200 p-4 text-green-800 text-sm"><%= notice %></div>
+      <% end %>
+      <% if alert.present? %>
+        <div class="mb-4 rounded-md bg-red-50 border border-red-200 p-4 text-red-800 text-sm"><%= alert %></div>
+      <% end %>
+
+      <%= yield %>
+    </main>
+  </body>
+</html>
