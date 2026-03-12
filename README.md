@@ -42,7 +42,7 @@ Services:
 - Node.js (for Tailwind CSS build)
 - Bundler
 
-### Setup
+### Setup Locally
 
 ```bash
 # 1. Clone the repository
@@ -58,6 +58,23 @@ bin/rails db:create db:migrate db:seed
 # 4. Start the server
 bin/dev
 ```
+ ### Setup With Docker
+
+```bash
+# 1. Clone the repository
+git clone <repo-url>
+cd ShipRight
+# 2. Build and start the containers
+docker compose up --build
+
+# 3. Run database migrations and seed data inside the app container
+
+None, the docker compose file is set to run migrations and seeds on startup. If you need to run them manually, you can execute:
+docker compose exec app bin/rails db:create db:migrate db:seed
+
+
+```
+
 
 Open [http://localhost:3000](http://localhost:3000).
 
