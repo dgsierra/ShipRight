@@ -1,0 +1,95 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: shipright-app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      RAILS_ENV: development
+      RACK_ENV: development
+      RAILS_LOG_TO_STDOUT: "true"
+      RAILS_SERVE_STATIC_FILES: "true"
+      DATABASE_URL: postgres://shipright:shipright@db:5432/ship_right_development
+      REDIS_URL: redis://redis:6379/1
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ship_right_development
+      POSTGRES_USER: shipright
+      POSTGRES_PASSWORD: shipright
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/rails
+      - bundle:/usr/local/bundle
+    networks:
+      - shipright
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: shipright-test
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      RAILS_ENV: test
+      RACK_ENV: test
+      DATABASE_URL: postgres://shipright:shipright@db:5432/ship_right_test
+      REDIS_URL: redis://redis:6379/1
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ship_right_test
+      POSTGRES_USER: shipright
+      POSTGRES_PASSWORD: shipright
+    command: >
+      bash -lc "bundle exec rails db:create db:schema:load &&
+      bundle exec rspec"
+    volumes:
+      - .:/rails
+      - bundle:/usr/local/bundle
+    networks:
+      - shipright
+
+  db:
+    image: postgres:16
+    container_name: shipright-db
+    environment:
+      POSTGRES_DB: ship_right_development
+      POSTGRES_USER: shipright
+      POSTGRES_PASSWORD: shipright
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shipright -d ship_right_development"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - shipright
+
+  redis:
+    image: redis:7-alpine
+    container_name: shipright-redis
+    volumes:
+      - redis:/data
+    networks:
+      - shipright
+
+networks:
+  shipright:
+    name: shipright-network
+
+volumes:
+  bundle:
+  postgres:
+  redis:

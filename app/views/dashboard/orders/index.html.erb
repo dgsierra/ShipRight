@@ -1,0 +1,125 @@
+<%# Status badge helper %>
+<% status_colors = {
+  "pending"   => "bg-yellow-100 text-yellow-800",
+  "approved"  => "bg-blue-100 text-blue-800",
+  "shipped"   => "bg-indigo-100 text-indigo-800",
+  "delivered" => "bg-green-100 text-green-800",
+  "cancelled" => "bg-red-100 text-red-800"
+} %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold">Orders</h1>
+</div>
+
+<%# Filters %>
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+  <%= form_with url: dashboard_orders_path, method: :get, local: true, class: "flex flex-wrap gap-3 items-end" do |f| %>
+    <div>
+      <%= f.label :q, "Search", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.text_field :q, value: params[:q], placeholder: "Reference or customer...",
+          class: "rounded-md border border-gray-300 px-3 py-2 text-sm w-56 focus:ring-2 focus:ring-indigo-500" %>
+    </div>
+    <div>
+      <%= f.label :status, "Status", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.select :status,
+          [["All", ""]] + Order::STATUSES.map { |s| [s.capitalize, s] },
+          { selected: params[:status] },
+          class: "rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" %>
+    </div>
+    <%= f.submit "Filter", class: "bg-indigo-600 text-white px-4 py-2 rounded-md text-sm cursor-pointer hover:bg-indigo-700" %>
+    <%= link_to "Reset", dashboard_orders_path, class: "text-sm text-gray-500 hover:underline py-2" %>
+  <% end %>
+</div>
+
+<%# Status counts %>
+<div class="flex gap-3 mb-6">
+  <% Order::STATUSES.each do |s| %>
+    <%= link_to dashboard_orders_path(status: s),
+        class: "px-3 py-1 rounded-full text-xs font-medium #{status_colors[s]} hover:opacity-80" do %>
+      <%= s.capitalize %> (<%= @status_counts[s] || 0 %>)
+    <% end %>
+  <% end %>
+</div>
+
+<%# Bulk actions form %>
+<%= form_with url: bulk_approve_dashboard_orders_path, method: :post, local: true, id: "bulk-form" do |f| %>
+  <div class="flex items-center gap-3 mb-3">
+    <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+      <input type="checkbox" id="select-all" class="h-4 w-4 rounded border-gray-300">
+      Select all
+    </label>
+    <%= f.submit "Bulk Approve Selected", class: "bg-blue-600 text-white px-4 py-2 rounded-md text-sm cursor-pointer hover:bg-blue-700" %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200 text-sm">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-3 w-8"></th>
+          <th class="px-4 py-3 text-left font-medium text-gray-500">Reference</th>
+          <th class="px-4 py-3 text-left font-medium text-gray-500">Customer</th>
+          <th class="px-4 py-3 text-left font-medium text-gray-500">Status</th>
+          <th class="px-4 py-3 text-right font-medium text-gray-500">Total</th>
+          <th class="px-4 py-3 text-left font-medium text-gray-500">Created</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <% @orders.each do |order| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3">
+              <% if order.status == "pending" %>
+                <input type="checkbox" name="order_ids[]" value="<%= order.id %>"
+                  class="order-checkbox h-4 w-4 rounded border-gray-300 text-indigo-600">
+              <% end %>
+            </td>
+            <td class="px-4 py-3 font-mono font-medium text-indigo-700">
+              <%= link_to order.reference, dashboard_order_path(order), class: "hover:underline" %>
+            </td>
+            <td class="px-4 py-3">
+              <div class="font-medium"><%= order.customer_name %></div>
+              <div class="text-gray-400 text-xs"><%= order.customer_email %></div>
+            </td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium <%= status_colors[order.status] %>">
+                <%= order.status.capitalize %>
+              </span>
+            </td>
+            <td class="px-4 py-3 text-right font-medium">$<%= "%.2f" % order.total_dollars %></td>
+            <td class="px-4 py-3 text-gray-500"><%= order.created_at.strftime("%b %-d, %Y") %></td>
+            <td class="px-4 py-3 text-right">
+              <%= link_to "View", dashboard_order_path(order), class: "text-indigo-600 hover:underline text-xs" %>
+            </td>
+          </tr>
+        <% end %>
+
+        <% if @orders.empty? %>
+          <tr>
+            <td colspan="7" class="px-4 py-8 text-center text-gray-400">No orders found.</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
+
+<%# Pagination %>
+<% if @pagy.pages > 1 %>
+  <div class="mt-4 flex justify-center gap-2 text-sm">
+    <% if @pagy.prev %>
+      <%= link_to "← Previous", dashboard_orders_path(page: @pagy.prev, status: params[:status], q: params[:q]),
+          class: "px-3 py-1 rounded border border-gray-300 hover:bg-gray-50" %>
+    <% end %>
+    <span class="px-3 py-1 text-gray-500">Page <%= @pagy.page %> of <%= @pagy.pages %></span>
+    <% if @pagy.next %>
+      <%= link_to "Next →", dashboard_orders_path(page: @pagy.next, status: params[:status], q: params[:q]),
+          class: "px-3 py-1 rounded border border-gray-300 hover:bg-gray-50" %>
+    <% end %>
+  </div>
+<% end %>
+
+<script>
+  document.getElementById('select-all')?.addEventListener('change', function() {
+    document.querySelectorAll('.order-checkbox').forEach(cb => cb.checked = this.checked);
+  });
+</script>
