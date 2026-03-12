@@ -25,12 +25,20 @@ ShipRight is an internal operations dashboard built with Ruby on Rails 8. It cen
 | Jobs           | Solid Queue                       |
 | Pagination     | Pagy                              |
 
-## Getting Started
+## Services:
+
+Services:
+- `app` runs Rails on port `3000`
+- `db` runs PostgreSQL `16`
+- `redis` runs Redis for Sidekiq/shared app services
+- `test` runs the RSpec suite against `ship_right_test`
 
 ### Prerequisites
 
 - Ruby 3.2+
 - PostgreSQL 14+
+- Docker
+- Docker Compose
 - Node.js (for Tailwind CSS build)
 - Bundler
 
@@ -139,6 +147,15 @@ bundle exec rspec spec/models
 bundle exec rspec spec/services
 bundle exec rspec spec/requests
 bundle exec rspec spec/jobs
+```
+### Test With Docker
+
+```bash
+# Run the full test suite
+docker compose run --rm test
+
+# Run a single spec file
+docker compose run --rm test bash -lc "bundle exec rails db:create db:schema:load && bundle exec rspec spec/requests/dashboard/orders_spec.rb"
 ```
 
 Tests focus on behaviour:
