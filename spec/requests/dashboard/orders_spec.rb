@@ -49,17 +49,33 @@ RSpec.describe "Dashboard::Orders", type: :request do
     end
   end
 
-  describe "POST /dashboard/orders/bulk_approve" do
+  describe "POST /dashboard/orders/bulk_update" do
     let!(:orders) { create_list(:order, 2, status: "pending", user: user) }
 
     it "approves selected orders" do
-      post bulk_approve_dashboard_orders_path, params: { order_ids: orders.map(&:id) }
+      post bulk_update_dashboard_orders_path, params: { order_ids: orders.map(&:id), bulk_action: "approved" }
       expect(response).to redirect_to(dashboard_orders_path)
       orders.each { |o| expect(o.reload.status).to eq("approved") }
     end
 
     it "redirects with alert when no orders selected" do
-      post bulk_approve_dashboard_orders_path
+      post bulk_update_dashboard_orders_path, params: { bulk_action: "approved" }
+      expect(response).to redirect_to(dashboard_orders_path)
+    end
+
+    it "cancels selected orders" do
+      post bulk_update_dashboard_orders_path, params: { order_ids: orders.map(&:id), bulk_action: "cancelled" }
+      expect(response).to redirect_to(dashboard_orders_path)
+      orders.each { |o| expect(o.reload.status).to eq("cancelled") }
+    end
+
+    it "redirects with alert when no orders selected" do
+      post bulk_update_dashboard_orders_path, params: { bulk_action: "cancelled" }
+      expect(response).to redirect_to(dashboard_orders_path)
+    end
+
+    it "redirects with alert when bulk action is invalid" do
+      post bulk_update_dashboard_orders_path, params: { order_ids: orders.map(&:id), bulk_action: "shipped" }
       expect(response).to redirect_to(dashboard_orders_path)
     end
   end

@@ -11,7 +11,7 @@ Rails.application.routes.draw do
         post :cancel
       end
       collection do
-        post :bulk_approve
+        post :bulk_update
       end
     end
   end

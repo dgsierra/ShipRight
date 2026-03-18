@@ -53,7 +53,7 @@ statuses = %w[pending pending approved approved shipped shipped delivered cancel
 
 created_orders = 0
 
-15.times do |i|
+50.times do |i|
   customer = customers[i % customers.length]
   status   = statuses[i % statuses.length]
   staff    = i.even? ? admin : ops

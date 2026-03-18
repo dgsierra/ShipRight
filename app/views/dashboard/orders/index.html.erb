@@ -42,13 +42,20 @@
 </div>
 
 <%# Bulk actions form %>
-<%= form_with url: bulk_approve_dashboard_orders_path, method: :post, local: true, id: "bulk-form" do |f| %>
+<%= form_with url: bulk_update_dashboard_orders_path, method: :post, local: true, id: "bulk-form" do |f| %>
   <div class="flex items-center gap-3 mb-3">
     <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
       <input type="checkbox" id="select-all" class="h-4 w-4 rounded border-gray-300">
       Select all
     </label>
-    <%= f.submit "Bulk Approve Selected", class: "bg-blue-600 text-white px-4 py-2 rounded-md text-sm cursor-pointer hover:bg-blue-700" %>
+    <%= f.submit "Bulk Approve Selected",
+        name: "bulk_action",
+        value: "approved",
+        class: "bg-blue-600 text-white px-4 py-2 rounded-md text-sm cursor-pointer hover:bg-blue-700" %>
+    <%= f.submit "Bulk Cancel Selected",
+        name: "bulk_action",
+        value: "cancelled",
+        class: "bg-red-600 text-white px-4 py-2 rounded-md text-sm cursor-pointer hover:bg-red-700" %>
   </div>
 
   <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">

@@ -36,20 +36,15 @@ module Dashboard
       transition_order("cancelled")
     end
 
-    def bulk_approve
-      order_ids = params[:order_ids]&.map(&:to_i) || []
+    def bulk_update
+      status = params[:bulk_action].to_s
 
-      if order_ids.empty?
-        redirect_to dashboard_orders_path, alert: "No orders selected."
+      unless %w[approved cancelled].include?(status)
+        redirect_to dashboard_orders_path, alert: "Invalid bulk action."
         return
       end
 
-      result = Orders::BulkApproveService.new(order_ids, user: current_user).call
-
-      msg = "#{result.approved_count} order(s) approved."
-      msg += " #{result.failed_ids.length} could not be approved." if result.failed_ids.any?
-
-      redirect_to dashboard_orders_path, notice: msg
+      bulk_transition(status)
     end
 
     private
@@ -67,6 +62,22 @@ module Dashboard
       else
         redirect_to dashboard_order_path(@order), alert: result.error
       end
+    end
+
+    def bulk_transition(new_status)
+      order_ids = params[:order_ids]&.map(&:to_i) || []
+
+      if order_ids.empty?
+        redirect_to dashboard_orders_path, alert: "No orders selected."
+        return
+      end
+
+      result = Orders::BulkStatusTransitionService.new(order_ids, new_status, user: current_user).call
+
+      msg = "#{result.processed_count} order(s) #{new_status}."
+      msg += " #{result.failed_ids.length} could not be #{new_status}." if result.failed_ids.any?
+
+      redirect_to dashboard_orders_path, notice: msg
     end
   end
 end
